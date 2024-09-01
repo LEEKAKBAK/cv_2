@@ -223,12 +223,17 @@ export class CardEvent {
             // 새로운 무기 추가
             this.scene.hero.weapons.push(effect);
         }
-
-        // UI 제거 및 게임 재개
+    
+        // UI 제거
         if (this.scene.upgradeCardTexts) {
             this.scene.upgradeCardTexts.forEach(text => text.destroy());
         }
-        this.scene.physics.resume();
-        this.scene.isPaused = false;
+    
+        // 1초 대기 후 게임 재개
+        this.scene.time.delayedCall(500, () => {
+            this.scene.physics.resume();
+            this.scene.isPaused = false;
+        }, [], this);
     }
+    
 }
