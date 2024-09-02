@@ -127,6 +127,7 @@ export class CardEvent {
                 this.moveSelectionDown();
                 break;
             case 'Space':
+                //console.log("Space", event.code);
                 this.confirmSelection();
                 break;
             case 'Digit1':
@@ -158,20 +159,18 @@ export class CardEvent {
     confirmSelection() {
         if (this.keyboardEnabled) {
             const selectedCard = this.scene.upgradeCardTexts[this.selectedCardIndex];
-            const upgradeCard = this.upgradeCards.find(card => card.text === selectedCard.text);
-            
-            if (upgradeCard) {
+            const cardData = selectedCard.cardData;
+    
+            if (cardData.effect) {
                 // 업그레이드 카드인 경우
-                this.applyUpgrade(upgradeCard.effect);
+                this.applyUpgrade(cardData.effect);
             } else {
                 // 무기 카드인 경우
-                const weaponCard = weaponCards.find(card => `${card.name} (데미지: ${card.damage}, 공속: ${(1000 / card.fireRate).toFixed(1)}발/초, 크리확률: ${card.criticalChance}, 크리배율: ${card.criticalRate})` === selectedCard.text);
-                if (weaponCard) {
-                    this.applyUpgrade(weaponCard);
-                }
+                this.applyUpgrade(cardData);
             }
         }
     }
+    
 
     // updateCardSelection() {
     //     if (this.scene.upgradeCardTexts) {
@@ -223,12 +222,17 @@ export class CardEvent {
             // 새로운 무기 추가
             this.scene.hero.weapons.push(effect);
         }
-
-        // UI 제거 및 게임 재개
+    
+        // UI 제거
         if (this.scene.upgradeCardTexts) {
             this.scene.upgradeCardTexts.forEach(text => text.destroy());
         }
-        this.scene.physics.resume();
-        this.scene.isPaused = false;
+    
+        // 1초 대기 후 게임 재개
+        this.scene.time.delayedCall(500, () => {
+            this.scene.physics.resume();
+            this.scene.isPaused = false;
+        }, [], this);
     }
+    
 }
