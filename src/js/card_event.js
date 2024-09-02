@@ -4,11 +4,11 @@ export class CardEvent {
     constructor(scene) {
         this.scene = scene;
         this.upgradeCards = [
-            { text: '무기 데미지 20% 증가', effect: 'increaseDamage' },
-            { text: '무기 공속 20% 증가', effect: 'increaseFireRate' },
-            { text: '크리확률 20% 증가', effect: 'increaseCriticalChance' },
-            { text: '무기 속도 20% 증가', effect: 'increaseWeaponSpeed' },
-            { text: '크리배율 20% 증가', effect: 'increaseCriticalRate' }
+            { name: '데미지 증가', text: '무기 데미지 20% 증가', effect: 'increaseDamage' },
+            { name: '공속 증가', text: '무기 공속 20% 증가', effect: 'increaseFireRate' },
+            { name: '크리확률 증가', text: '크리확률 20% 증가', effect: 'increaseCriticalChance' },
+            { name: '속도 증가', text: '무기 속도 20% 증가', effect: 'increaseWeaponSpeed' },
+            { name: '크리배율 증가', text: '크리배율 20% 증가', effect: 'increaseCriticalRate' }
         ];
         this.selectedCardIndex = 0;
         this.keyboardEnabled = true;
@@ -50,62 +50,68 @@ export class CardEvent {
         }
 
         // UI 생성
-        // this.scene.upgradeCardTexts = selectedCards.map((card, index) => {
-        //     const fireRatePerSecond = (1000 / card.fireRate).toFixed(1); // 초당 발사 수 계산
-        //     const text = this.scene.add.text(this.scene.scale.width / 2, this.scene.scale.height / 2 + index * 60, card.text || `${card.name} (데미지: ${card.damage}, 공속: ${fireRatePerSecond}발/초, 크리확률: ${card.criticalChance}, 크리배율: ${card.criticalRate})`, {
-        //         fontSize: '24px',
-        //         fill: '#000',
-        //         backgroundColor: '#ffffff',
-        //         padding: { x: 10, y: 20 } // 세로 길이 늘리기
-        //     }).setOrigin(0.5);
-        //     text.setInteractive();
-        //     text.on('pointerdown', () => {
-        //         this.applyUpgrade(card.effect || card);
-        //     });
-        //     return text;
-        // });
         this.scene.upgradeCardTexts = selectedCards.map((card, index) => {
-            const cardWidth = 400; // 카드의 너비
-            const cardHeight = 200; // 카드의 높이 (2:1 비율)
+            const cardWidth = this.scene.scale.width * 0.8; // 카드의 너비
+            const cardHeight = cardWidth / 4; // 카드의 높이 (가로:세로 = 4:1 비율)
             const padding = 10;
-            const fireRatePerSecond = (1000 / card.fireRate).toFixed(1);
-            
+
+            // 배경
             const cardBackground = this.scene.add.rectangle(
                 this.scene.scale.width / 2,
-                this.scene.scale.height / 2 + index * (cardHeight + 20),
+                this.scene.scale.height / 4 + index * (cardHeight + 20),
                 cardWidth,
                 cardHeight,
                 0xffffff
             ).setOrigin(0.5);
-    
-            const content = card.text || 
-                `${card.name}\n데미지: ${card.damage}\n공속: ${fireRatePerSecond}발/초\n크리확률: ${card.criticalChance}\n크리배율: ${card.criticalRate}`;
-    
-            const text = this.scene.add.text(
-                cardBackground.x - cardWidth / 2 + padding,
-                cardBackground.y - cardHeight / 2 + padding,
-                content,
+
+            // 이미지
+            const imageSize = cardHeight - padding * 2;
+            const image = this.scene.add.image(
+                this.scene.scale.width / 2 - cardWidth / 2 + padding + imageSize / 2,
+                cardBackground.y,
+                card.image || 'upgrade' // 여기에 이미지 키를 넣어주세요
+            ).setDisplaySize(imageSize, imageSize);
+
+            // 이름
+            const name = this.scene.add.text(
+                image.x + imageSize / 2 + padding,
+                cardBackground.y - imageSize / 2 + padding,
+                card.name,
                 {
-                    fontSize: '18px',
+                    fontSize: '24px', // 텍스트 크기 조정
                     fill: '#000',
-                    wordWrap: { width: cardWidth - padding * 2, useAdvancedWrap: true }
+                    fontStyle: 'bold'
                 }
-            );
-    
-            const container = this.scene.add.container(0, 0, [cardBackground, text]);
+            ).setOrigin(0, 0.5);
+
+            // 설명
+            const description = card.text || 
+                `데미지: ${card.damage}\n공속: ${(1000 / card.fireRate).toFixed(1)}발/초\n크리확률: ${card.criticalChance}\n크리배율: ${card.criticalRate}`;
+            const descriptionText = this.scene.add.text(
+                name.x,
+                name.y + name.height,
+                description,
+                {
+                    fontSize: '16px', // 텍스트 크기 조정
+                    fill: '#000',
+                    wordWrap: { width: cardWidth - imageSize - padding * 4, useAdvancedWrap: true }
+                }
+            ).setOrigin(0, 0);
+
+            const container = this.scene.add.container(0, 0, [cardBackground, image, name, descriptionText]);
             container.setInteractive(new Phaser.Geom.Rectangle(
                 cardBackground.x - cardWidth / 2,
                 cardBackground.y - cardHeight / 2,
                 cardWidth,
                 cardHeight
             ), Phaser.Geom.Rectangle.Contains);
-    
+
             container.on('pointerdown', () => {
                 this.applyUpgrade(card.effect || card);
             });
 
             container.cardData = card; // 카드 데이터 저장
-    
+
             return container;
         });
 
@@ -127,17 +133,16 @@ export class CardEvent {
                 this.moveSelectionDown();
                 break;
             case 'Space':
-                //console.log("Space", event.code);
                 this.confirmSelection();
                 break;
             case 'Digit1':
-                this.applyUpgrade(this.scene.upgradeCardTexts[0]?.effect || this.scene.upgradeCardTexts[0]?.name);
+                this.applyUpgrade(this.scene.upgradeCardTexts[0]?.cardData.effect || this.scene.upgradeCardTexts[0]?.cardData);
                 break;
             case 'Digit2':
-                this.applyUpgrade(this.scene.upgradeCardTexts[1]?.effect || this.scene.upgradeCardTexts[1]?.name);
+                this.applyUpgrade(this.scene.upgradeCardTexts[1]?.cardData.effect || this.scene.upgradeCardTexts[1]?.cardData);
                 break;
             case 'Digit3':
-                this.applyUpgrade(this.scene.upgradeCardTexts[2]?.effect || this.scene.upgradeCardTexts[2]?.name);
+                this.applyUpgrade(this.scene.upgradeCardTexts[2]?.cardData.effect || this.scene.upgradeCardTexts[2]?.cardData);
                 break;
         }
     }
@@ -160,7 +165,7 @@ export class CardEvent {
         if (this.keyboardEnabled) {
             const selectedCard = this.scene.upgradeCardTexts[this.selectedCardIndex];
             const cardData = selectedCard.cardData;
-    
+
             if (cardData.effect) {
                 // 업그레이드 카드인 경우
                 this.applyUpgrade(cardData.effect);
@@ -170,29 +175,19 @@ export class CardEvent {
             }
         }
     }
-    
 
-    // updateCardSelection() {
-    //     if (this.scene.upgradeCardTexts) {
-    //         this.scene.upgradeCardTexts.forEach((text, index) => {
-    //             if (text) { // text가 유효한지 확인
-    //                 if (index === this.selectedCardIndex) {
-    //                     text.setStyle({ backgroundColor: '#ff0' }); // 선택된 카드의 테두리 색상 변경
-    //                 } else {
-    //                     text.setStyle({ backgroundColor: '#ffffff' });
-    //                 }
-    //             }
-    //         });
-    //     }
-    // }
     updateCardSelection() {
         this.scene.upgradeCardTexts.forEach((container, index) => {
             if (index === this.selectedCardIndex) {
-                container.list[0].setStrokeStyle(4, 0x0000ff); // 배경 사각형에 테두리 추가
-                container.list[1].setColor('#0000ff'); // 텍스트 색상 변경
+                container.list[0].setFillStyle(0x4d4d4d); // 진한 회색 배경
+                container.list[2].setColor('#ffffff'); // 흰색 텍스트 (이름)
+                container.list[3].setColor('#ffffff'); // 흰색 텍스트 (설명)
+                container.list[0].setStrokeStyle(4, 0xffa500); // 주황색 테두리
             } else {
+                container.list[0].setFillStyle(0xffffff); // 원래 흰색 배경
+                container.list[2].setColor('#000000'); // 원래 검은색 텍스트 (이름)
+                container.list[3].setColor('#000000'); // 원래 검은색 텍스트 (설명)
                 container.list[0].setStrokeStyle(0); // 테두리 제거
-                container.list[1].setColor('#000000'); // 텍스트 색상 원래대로
             }
         });
     }
@@ -234,5 +229,4 @@ export class CardEvent {
             this.scene.isPaused = false;
         }, [], this);
     }
-    
 }
