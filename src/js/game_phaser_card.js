@@ -158,41 +158,42 @@ export class MainScene extends Phaser.Scene {
     }
 
     handleWeaponFire(time) {
-    this.hero.weapons.forEach(weapon => {
-        if (time > weapon.time + weapon.fireRate) {
-            const closestEnemy = this.util.getClosestEnemy(this.enemies, this.heroGraphics);
-            if (closestEnemy) {
-                const angleStep = weapon.fireCount > 1 ? weapon.fireAngle / (weapon.fireCount - 1) : 0;
-                const startAngle = -weapon.fireAngle / 2;
+        this.hero.weapons.forEach(weapon => {
+            if (time > weapon.time + weapon.fireRate) {
+                const closestEnemy = this.util.getClosestEnemy(this.enemies, this.heroGraphics);
+                if (closestEnemy) {
+                    const angleStep = weapon.fireCount > 1 ? weapon.fireAngle / (weapon.fireCount - 1) : 0;
+                    const startAngle = -weapon.fireAngle / 2;
 
-                for (let i = 0; i < weapon.fireCount; i++) {
-                    const angle = startAngle + i * angleStep;
-                    const radian = Phaser.Math.DegToRad(angle);
+                    for (let i = 0; i < weapon.fireCount; i++) {
+                        const angle = startAngle + i * angleStep;
+                        const radian = Phaser.Math.DegToRad(angle);
 
-                    // 무기의 발사 위치를 회전시켜서 여러 방향으로 발사되도록 함
-                    const targetX = closestEnemy.x + Math.cos(radian) * weapon.range;
-                    const targetY = closestEnemy.y + Math.sin(radian) * weapon.range;
+                        // 무기의 발사 위치를 회전시켜서 여러 방향으로 발사되도록 함
+                        // 개선필요!!!!!!!! 지금 엉망임!!!!
+                        const targetX = closestEnemy.x + Math.cos(radian) * 20;
+                        const targetY = closestEnemy.y + Math.sin(radian) * 20;
 
-                    const weaponSprite = this.add.circle(this.heroGraphics.x, this.heroGraphics.y, 3, weapon.color);
-                    this.physics.add.existing(weaponSprite);
-                    weaponSprite.body.setCollideWorldBounds(true);
-                    weaponSprite.damage = weapon.damage;
-                    weaponSprite.criticalChance = weapon.criticalChance;
-                    weaponSprite.criticalRate = weapon.criticalRate;
-                    weaponSprite.color = weapon.color;
-                    weaponSprite.range = weapon.range;
-                    this.weapons.add(weaponSprite);
+                        const weaponSprite = this.add.circle(this.heroGraphics.x, this.heroGraphics.y, 3, weapon.color);
+                        this.physics.add.existing(weaponSprite);
+                        weaponSprite.body.setCollideWorldBounds(true);
+                        weaponSprite.damage = weapon.damage;
+                        weaponSprite.criticalChance = weapon.criticalChance;
+                        weaponSprite.criticalRate = weapon.criticalRate;
+                        weaponSprite.color = weapon.color;
+                        weaponSprite.range = weapon.range;
+                        this.weapons.add(weaponSprite);
 
-                    // 발사 각도에 따라 무기의 목표 위치를 설정
-                    Phaser.Math.RotateAroundDistance({ x: targetX, y: targetY }, this.heroGraphics.x, this.heroGraphics.y, radian, weapon.range);
+                        // 발사 각도에 따라 무기의 목표 위치를 설정
+                        //Phaser.Math.RotateAroundDistance({ x: targetX, y: targetY }, this.heroGraphics.x, this.heroGraphics.y, radian, weapon.range);
 
-                    this.physics.moveTo(weaponSprite, targetX, targetY, weapon.weaponSpeed);
+                        this.physics.moveTo(weaponSprite, targetX, targetY, weapon.weaponSpeed);
+                    }
+                    weapon.time = time;
                 }
-                weapon.time = time;
             }
-        }
-    });
-}
+        });
+    }
 
 
     handleWeaponEnemyCollision(weapon, enemy) {
