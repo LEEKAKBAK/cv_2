@@ -170,10 +170,15 @@ export class MainScene extends Phaser.Scene {
                     for (let i = 0; i < weapon.fireCount; i++) {
                         const angle = startAngle + i * angleStep;
                         const radian = Phaser.Math.DegToRad(angle);
-                        
-                        const targetX = closestEnemy.x;
-                        const targetY = closestEnemy.y;
                         const angleHtoE = Phaser.Math.Angle.Between(this.heroGraphics.x, this.heroGraphics.y, closestEnemy.x, closestEnemy.y);
+                        
+                        // const targetX = closestEnemy.x;
+                        // const targetY = closestEnemy.y;
+                        const targetX = this.heroGraphics.x + Math.cos(angleHtoE) * 3000;
+                        const targetY = this.heroGraphics.y + Math.sin(angleHtoE) * 3000;
+                        console.log(closestEnemy.x, targetX);
+                        console.log(closestEnemy.y, targetY);
+                        
                         let newStartPoint = Phaser.Math.RotateAroundDistance({ x: this.heroGraphics.x, y: this.heroGraphics.y + (startstep + i * step) }, this.heroGraphics.x, this.heroGraphics.y, angleHtoE, 5);
 
                         //let newStartPoint = Phaser.Math.RotateAroundDistance({ x: 0, y: 0 }, this.heroGraphics.x, this.heroGraphics.y, radian, 50);
@@ -188,11 +193,13 @@ export class MainScene extends Phaser.Scene {
                         weaponSprite.range = weapon.range;
                         this.weapons.add(weaponSprite);
 
-                        // 발사 각도에 따라 무기의 목표 위치를 설정
-                        let newPoint = Phaser.Math.RotateAroundDistance({ x: targetX, y: targetY }, this.heroGraphics.x, this.heroGraphics.y, radian, weapon.range);
-
-                        this.physics.moveTo(weaponSprite, newPoint.x, newPoint.y, weapon.weaponSpeed);
-                        //this.physics.moveTo(weaponSprite, targetX, targetY, weapon.weaponSpeed);
+                        if (weapon.fireAngle) {
+                            // 발사 각도에 따라 무기의 목표 위치를 설정
+                            let newPoint = Phaser.Math.RotateAroundDistance({ x: targetX, y: targetY }, this.heroGraphics.x, this.heroGraphics.y, radian, weapon.range);
+                            this.physics.moveTo(weaponSprite, newPoint.x, newPoint.y, weapon.weaponSpeed);
+                        } else {
+                            this.physics.moveTo(weaponSprite, targetX, targetY, weapon.weaponSpeed);
+                        }                        
                     }
                     weapon.time = time;
                 }
