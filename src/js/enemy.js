@@ -22,6 +22,7 @@ export class Enemy {
                 this.size = 12;
                 this.color = 0xffa500;
                 this.speed = 100;
+                this.dropRate = 0.5;  // large일 경우 확률 조정
                 this.mass = 5;
                 break;
             case 'large':
